@@ -1,0 +1,25 @@
+---
+# defaults file for kvm
+kvm_virt_manager: yes
+
+kvm_preseed_server: yes
+kvm_preseed_nics: auto
+kvm_preseed_docroot: /var/www/preseed
+
+kvm_preseed_cfg_mirror: http://ftp2.de.debian.org/
+kvm_preseed_cfg_mirror_directory: debian
+kvm_preseed_cfg_root_password: false
+kvm_preseed_cfg_timezone: Europe/Berlin
+kvm_preseed_cfg_public_key: false
+
+kvm_bridges:
+  default:
+    nic: virbr0
+    forward: true
+    ip: 192.168.122.1
+    netmask: 255.255.255.0
+    dhcp: true
+    start: 192.168.122.2
+    end: 192.168.122.254
+kvm_vm_manage_location: http://ftp2.de.debian.org/debian/dists/{{ item.0.os }}/main/installer-amd64/
+kvm_vm_manage: []

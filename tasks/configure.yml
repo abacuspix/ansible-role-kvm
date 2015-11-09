@@ -1,0 +1,16 @@
+---
+# configure file for kvm
+- name: Adding ansible-user to KVM group
+  user:
+    name: "{{ ansible_ssh_user }}"
+    groups: "libvirt"
+    append: True
+
+- name: Adding admins to KVM group
+  user:
+    name: "{{ item }}"
+    groups: "libvirt"
+    append: True
+  with_items:
+    - "{{ kvm_admins }}"
+  when: kvm_admins is defined

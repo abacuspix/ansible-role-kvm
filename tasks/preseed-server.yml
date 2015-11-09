@@ -1,0 +1,49 @@
+---
+# tasks file for preseed-server
+- name: Gathering facts
+  setup:
+
+- name: Searching for virtual bridges
+  shell: /bin/grep bridge /etc/libvirt/qemu/networks/autostart/*.xml | awk -F'"' '{print $2}' | grep -v '^$' | sort -u
+  register: dynamic_vbridges
+  when: kvm_preseed_nics == 'auto'
+  changed_when: false
+
+- name: Register vhost for preseed
+  template:
+    src: nginx_vhost_preseed.j2
+    dest: /etc/nginx/sites-enabled/preseed.conf
+    mode: 0644
+    owner: root
+    group: root
+  notify:
+    - reload nginx
+
+- name: Create folder
+  file:
+    name: "{{ kvm_preseed_docroot }}"
+    state: directory
+    owner: www-data
+    group: www-data
+    mode: 0755
+  when: kvm_preseed_server
+
+- name: Syncing preseed files
+  template:
+    src: preseed-jessie.j2
+    dest: "{{ kvm_preseed_docroot }}"/jessie.cfg
+    owner: www-data
+    group: www-data
+    mode: 0755
+  when: kvm_preseed_server and kvm_preseed_cfg_root_password
+
+- name: Set permissions
+  file:
+    path: "{{ kvm_preseed_docroot }}"
+    owner: www-data
+    group: www-data
+    recurse: yes
+    state: directory
+
+- name: Ensure Nginx is running
+  service: name=nginx state=started

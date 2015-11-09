@@ -1,0 +1,60 @@
+---
+# tasks file for vm-manager
+- name: Create LVM devices
+  lvol:
+    vg: vg0
+    lv: "{{ item.name }}.{{ item.domain }}"
+    size: "{{ item.disk }}G"
+  with_items: kvm_vm_manage
+  register: lvm
+
+- name: Getting virtual machines
+  virt: command=list_vms
+  register: vms
+
+- name: Fetching name from vbridgee
+  shell: grep bridge /etc/libvirt/qemu/networks/autostart/{{ item.domain }}.xml | awk -F '"' '{print $2}' | grep -v '^$'
+  register: kvm_vbridge_name
+  with_items: kvm_vm_manage
+  changed_when: false
+
+- name: Fetching IP from vbridge
+  shell: grep address /etc/libvirt/qemu/networks/autostart/{{ item.domain }}.xml | awk -F '"' '{print $2}'
+  register: kvm_vbridge_ip
+  with_items: kvm_vm_manage
+  changed_when: false
+
+- name: Fetching netmask from vbridge
+  shell: grep netmask /etc/libvirt/qemu/networks/autostart/{{ item.domain }}.xml | awk -F '"' '{print $4}'
+  register: kvm_vbridge_netmask
+  with_items: kvm_vm_manage
+  changed_when: false
+
+- name: Creating VM
+  command: >
+    /usr/bin/virt-install
+    --name "{{ item.0.name }}.{{ item.0.domain }}"
+    --vcpus "{{ item.0.vcpu }}"
+    --ram "{{ item.0.ram }}"
+    --disk "/dev/vg0/{{ item.0.name }}.{{ item.0.domain }}"
+    --location "{{ kvm_vm_manage_location }}"
+    --vnc --noautoconsole --os-variant debianwheezy
+    --network "bridge:{{ item.1.stdout }}"
+    --extra-args "install=auto text fb=false debconf/frontend=noninteractive debian-installer=en_US locale=en_US.UTF-8 keymap=us
+                  url=http://{{ item.2.stdout }}/{{ item.0.os }}.cfg
+                  netcfg/choose_interface=auto
+                  netcfg/disable_autoconfig=true
+                  netcfg/get_ipaddress={{ item.0.ip }}
+                  netcfg/get_netmask={{ item.3.stdout }}
+                  netcfg/get_gateway={{ item.2.stdout }}
+                  netcfg/get_nameservers={{ item.2.stdout }}
+                  netcfg/confirm_static=true
+                  netcfg/get_hostname={{ item.0.name }}
+                  netcfg/get_domain={{ item.0.domain }}
+                  DEBCONF_DEBUG=5"
+  with_together:
+    - kvm_vm_manage
+    - kvm_vbridge_name.results
+    - kvm_vbridge_ip.results
+    - kvm_vbridge_netmask.results
+  when: item.0.name + '.' + item.0.domain not in vms.list_vms

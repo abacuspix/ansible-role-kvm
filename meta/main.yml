@@ -1,0 +1,20 @@
+---
+galaxy_info:
+  author: Florian Pelgrim
+  description: Install KVM and manage virtual machines
+  company: craneworks
+  license: CC-BY
+  min_ansible_version: 1.9
+  platforms:
+  - name: Debian
+    versions:
+      - wheezy
+      - jessie
+  - name: Ubuntu
+    versions:
+      - trusty
+  categories:
+  - networking
+  - system
+  - cloud
+dependencies: []

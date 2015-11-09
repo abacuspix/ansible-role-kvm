@@ -1,0 +1,15 @@
+server {
+{% if dynamic_vbridges %}
+{% for nic in dynamic_vbridges.stdout_lines %}
+  listen  {{ hostvars[inventory_hostname]['ansible_' + nic]['ipv4']['address'] }}:80 default;
+{% endfor %}
+{% else %}
+{% for nic in kvm_preseed_nics %}
+  listen  {{ hostvars[inventory_hostname]['ansible_' + nic]['ipv4']['address'] }}:80 default;
+{% endfor %}
+{% endif %}
+
+  access_log /var/log/nginx/preseed.log combined;
+
+  root {{ kvm_preseed_docroot }};
+}

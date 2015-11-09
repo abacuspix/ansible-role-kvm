@@ -1,0 +1,16 @@
+<!--
+#{{ ansible_managed }}
+-->
+<network>
+  <name>{{ item.key }}</name>
+  <bridge name="{{ item.value.nic }}"/>
+  {%if item.value.forward %}<forward/>
+  {% endif %}
+  <ip address="{{ item.value.ip }}" netmask="{{ item.value.netmask }}">
+  {% if item.value.dhcp is defined and item.value.dhcp %}
+    <dhcp>
+      <range start="{{ item.value.start }}" end="{{ item.value.end }}"/>
+    </dhcp>
+  {% endif %}
+  </ip>
+</network>

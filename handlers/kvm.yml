@@ -1,0 +1,7 @@
+---
+# handlers file for kvm
+- name: restart libvirtd
+  service: name=libvirtd state=restarted
+
+- name: reload libvirtd
+  service: name=libvirtd state=reloaded

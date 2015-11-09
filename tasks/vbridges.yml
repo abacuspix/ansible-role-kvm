@@ -1,0 +1,27 @@
+---
+# bridges file for kvm
+- name: Rendering virtual bridges
+  template:
+    src: vbridges.j2
+    dest: /etc/libvirt/qemu/networks/{{ item.key }}.xml
+    owner: root
+    group: root
+    mode: 0644
+  register: virbr
+  with_dict: kvm_bridges
+
+- name: Enable autostart of virtual bridges
+  file:
+    src: /etc/libvirt/qemu/networks/{{ item.key }}.xml
+    dest: /etc/libvirt/qemu/networks/autostart/{{ item.key }}.xml
+    state: link
+    owner: root
+    group: root
+    mode: 0644
+  register: virbr_links
+  with_dict: kvm_bridges
+
+
+- name: Force restart of libirtd to bring up interface
+  service: name=libvirtd state=restarted
+  when: virbr.changed or virbr_links.changed

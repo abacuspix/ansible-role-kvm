@@ -1,0 +1,9 @@
+---
+# tasks file for kvm
+- include: install.yml
+- include: configure.yml
+- include: vbridges.yml
+- include: preseed-server.yml
+  when: kvm_preseed_server
+- include: vm-manage.yml
+  when: kvm_vm_manage
